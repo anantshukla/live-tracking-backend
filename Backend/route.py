@@ -3,13 +3,19 @@ from Backend import app,db,mail
 from Backend.models import User, Location, Locationdetails, locationDetailsSchemas, nextLocationDetailsSchemas
 import datetime, time
 
+from flask_cors import CORS, cross_origin
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 @app.route("/api", methods=["GET"])
+@cross_origin()
 def apiTest():
     return jsonify({'status':True, 'message':'Server Works.'})
 
 ###################### API for signup ############################
 @app.route("/signup", methods=["POST"])
+@cross_origin()
 def signup():
     ###################### API Validation #########################
     if User.query.filter_by(email = request.form.get('email')).first():
@@ -32,6 +38,7 @@ def signup():
 
 ################### API for Login #########################
 @app.route('/login',methods=["POST"])
+@cross_origin()
 def login():
     if User.query.filter_by(email=request.form.get('email'), password=request.form.get('password')).first():
         user = User.query.filter_by(email=request.form.get('email')).first()
@@ -42,6 +49,7 @@ def login():
 
 ################### API for changing password #####################
 @app.route('/changepassword',methods=['POST'])
+@cross_origin()
 def changepassword():
     user = User.query.filter_by(email=request.form.get('email')).first()
     if user:
@@ -61,6 +69,7 @@ def changepassword():
 
 ##################### API for forget password #######################
 @app.route('/forgetpassword', methods=['POST'])
+@cross_origin()
 def forgetpassword():
     if session.get(request.form.get('email')) and request.form.get('otp'):
         if int(request.form.get('otp'))==session[request.form.get('email')]:
@@ -95,6 +104,7 @@ def forgetpassword():
 
 
 @app.route('/getlocation',methods=['POST'])
+@cross_origin()
 def getlocation():
     start_time = time.time()
     location = Locationdetails.query.all()
@@ -104,8 +114,15 @@ def getlocation():
         empID = item['empID']
         del(item['empID'])
         loc = item['CurrentLocation']
+        #test
+        x = loc.split(", ")
+        loc_lat = float(x[0]) - 0.04
+        loc_long = float(x[1]) - 0.04
+        # print(type(loc_lat))
+        #float(x)
+        #test
         del(item['CurrentLocation'])
-        item['routes']=[[loc,'09:30','address1']]
+        item['routes']=[[loc_lat, loc_long, '09:30', 'Sample Address 1']]
         item['distance'] = 1
         finalData[empID] = item
 
@@ -113,6 +130,7 @@ def getlocation():
 
 
 @app.route('/getnextlocation',methods=['POST'])
+@cross_origin()
 def getnextlocation():
     start_time = time.time()
     location = Locationdetails.query.all()
@@ -122,6 +140,8 @@ def getnextlocation():
         empID = item['empID']
         del(item['empID'])
         item['NextDeliveryLocation'] = item['CurrentLocation']
+        item['eta_nextlocation'] = "08:00" #temp
+        item['NextDeliveryAddress'] = "Sample Address 1" #temp
         now = datetime.datetime.now()
         item['current_time'] = str(now.hour)+':'+str(now.minute)
         finalData[empID] = item
@@ -131,6 +151,7 @@ def getnextlocation():
 
 
 @app.route('/setlocation',methods=['POST'])
+@cross_origin()
 def setlocation():
     if request.form.get('empID'):
         if Location.query.filter_by(empID=int(request.form.get('empID'))).first():
