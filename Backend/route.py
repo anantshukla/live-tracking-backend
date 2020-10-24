@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from Backend import app,db,mail
 from Backend.models import User, Location, Locationdetails, locationDetailsSchemas, nextLocationDetailsSchemas
 import datetime, time
+import pytz
 
 from flask_cors import CORS, cross_origin
 cors = CORS(app)
@@ -157,7 +158,7 @@ def setlocation():
         if Location.query.filter_by(empID=int(request.form.get('empID'))).first():
             locationData = Location.query.filter_by(empID=int(request.form.get('empID'))).first()
             locationData.CurrentLocation = request.form.get('location')
-            locationData.LastUpdated = datetime.datetime.now()
+            locationData.LastUpdated = datetime.datetime.now(pytz.timezone('Asia/Calcutta'))
             locationData.BatteryStatus = int(request.form.get('battery'))
             db.session.commit()
             return jsonify({'status':True,'message':'Location updated successfully'})
